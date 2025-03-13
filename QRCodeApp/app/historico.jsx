@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";	
 import { Share } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Try } from "expo-router/build/views/Try";
 
 export default function Historico() {
   const router = useRouter();
