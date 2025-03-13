@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, use } from "react";
 import { View, Text, Button, StyleSheet, Alert, TouchableOpacity} from "react-native";
 import { useRouter } from "expo-router";
 import {CameraView, useCameraPermissions} from 'expo-camera'
+import {MaterialIcons} from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Index() {
   const router = useRouter();
@@ -10,6 +13,36 @@ export default function Index() {
   const [scanned, setScanned] = useState(false)
   const [qrData, setQrData] = useState('')
   const [qrList, setQrList] = useState([])
+  
+  const loadQrList = async () => {
+    try {
+      const storedQrList = await AsyncStorage.getItem('qrList');
+      if (storedQrList) {
+        setQrList(JSON.parse(storedQrList));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar qrList do AsyncStorage:', error);
+    }
+  };
+
+  const saveQrList = async (list) => {
+    try {
+      await AsyncStorage.setItem('qrList', JSON.stringify(list)); 
+    } catch (error) {
+      console.error('Erro ao salvar qrList no AsyncStorage:', error);
+    }
+  };
+
+  useFocusEffect(() => { 
+    useCallback(() => {
+      loadQrList();
+    })
+  }, []);
+
+  useEffect(() => {
+    saveQrList(qrList);
+  }, [qrList]);
+  
 
   if(!permission){
     return <View/>
@@ -49,20 +82,25 @@ export default function Index() {
    
     <View style={styles.controles}>
         <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}> 
-            <Text style={styles.text}> Inverter camera</Text>
+            <MaterialIcons name="flip-camera-ios" size={24} color="white" />
         </TouchableOpacity>
     
         {scanned && (
             <> 
                 <TouchableOpacity style={styles.button} onPress ={() => setScanned(false)}> 
-                    <Text style={styles.text}> Escanear novamente</Text>
+                    <MaterialIcons name="qr-code-scanner" size={24} color="white" />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.button} onPress ={irParaHistorico}> 
-                    <Text style={styles.text}> Ver historico</Text>
+                    <MaterialIcons name="list" size={24} color="white" />
                 </TouchableOpacity>
             </>
         )}
+    </View>
+    <View style={styles.counterContainer}>
+        <Text style={styles.counterText}>
+            Total de QR Codes: {qrList.length}
+        </Text>
     </View>
 
     {qrData !== '' &&(
@@ -75,6 +113,16 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
+    counterContainer: {
+        flex: 0.5,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "yellow",
+      },
+      counterText: {
+        fontSize: 16,
+        color: "#555",
+      },
     camera:{
         flex: 10,
     },

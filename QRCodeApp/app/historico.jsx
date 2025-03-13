@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {View, Text, FlatList, StyleSheet, Linking, Button, TouchableOpacity} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";	
+import { Share } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Try } from "expo-router/build/views/Try";
 
 export default function Historico() {
   const router = useRouter();
@@ -18,6 +22,11 @@ export default function Historico() {
 
   const limparHistorico = () => {
     setQrListArray([]);
+    try{
+      AsyncStorage.removeItem("qrList");
+    } catch (error) {
+      console.error('Erro ao limpar qrList do AsyncStorage:', error);
+    }
   };
 
   const renderItem = async ({ item, index }) => {
@@ -27,7 +36,7 @@ export default function Historico() {
     if(validURL){
       return(
         <View style={styles.listItem}> 
-          <Text style={[styles.listText, {color: "blue", textDecorationLine: "underline"},]} onPress={() => Linking.openURL(url)}> {url} </Text>
+          <Text style={[styles.listText, {color: "blue", textDecorationLine: "underline"},]} onPress={() => Linking.openURL(url)} onLongPress={() => Share.share({message: url}) }> {url} </Text>
         </View>
       );
     }
@@ -41,11 +50,11 @@ export default function Historico() {
 
   return(
     <View style={[styles.historyContainer, darkMode &&{backgroundColor: '#000', color: '#fff' },]}>
-      <Text style={styles.historyTitle}> Historico</Text>
+      <Text style={[styles.historyTitle, darkMode &&{backgroundColor: '#000', color: '#fff'}, ]}> Historico</Text>
       <FlatList data={qrListArray} renderItem={renderItem} keyExtractor={(item, index) => index.toString()} ListEmptyComponent={<Text>Nenhum qr code escaneado</Text>}></FlatList>
       <Button title="Limpar Histórico" onPress={limparHistorico} color="red" />
       <TouchableOpacity style={styles.button} onPress={() => setDarkMode(!darkMode)}>
-        <Text style={{color: darkMode ? "white" : "black"}} >Modo escuro</Text>
+        <MaterialIcons name={darkMode ? "wb-sunny" : "dark-mode"} size={24} color={darkMode ? "white" : "black"} />
       </TouchableOpacity>
 </View>
   );
